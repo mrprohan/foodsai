@@ -135,7 +135,7 @@ export default function Home() {
       </main>
 
       <footer className={`${darkMode ? 'bg-gray-800' : 'bg-blue-300'} text-white p-4 text-center`}>
-        <p>&copy; 2024 Allergy-Free Recipe Assistant. All rights reserved.</p>
+        <p>&copy; 2024 SafeBites. All rights reserved.</p>
       </footer>
     </div>
   );
