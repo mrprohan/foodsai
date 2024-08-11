@@ -1,3 +1,6 @@
+
+
+/* Your existing global styles (if any) would go below these directives */
 import { Inter } from "next/font/google";
 import "./globals.css";
 

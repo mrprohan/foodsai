@@ -1,113 +1,137 @@
-import Image from "next/image";
+'use client'
+import { useState, useRef, useEffect } from "react";
+
+const foodBgPattern = `
+  data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23e0e8f0' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E
+`;
+
+const darkFoodBgPattern = `
+  data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23304030' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E
+`;
 
 export default function Home() {
+  const [messages, setMessages] = useState([{
+    role:'assistant',
+    content:`Hi! I'm your allergy-free recipe assistant. How can I help you find a delicious and safe recipe today?` 
+  }]);
+  const [message, setMessage] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+    setMessage('');
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {role:'user', content: message},
+      {role:'assistant' , content:''},
+    ]);
+
+    const response = fetch('api/chat', {
+      method:'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([...messages, {role:'user', content: message}]),
+    }).then(async (res) => {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      let result = '';
+      return reader.read().then(function processText({done, value}){
+        if (done) {
+          return result;
+        }
+        const text = decoder.decode(value || new Int8Array, {stream: true});
+        setMessages((messages) => {
+          let lastMessage = messages[messages.length-1];
+          let otherMessages = messages.slice(0, messages.length-1);
+          return [
+            ...otherMessages,
+            {
+              ...lastMessage,
+              content: lastMessage.content + text
+            }, 
+          ];
+        });
+        return reader.read().then(processText);
+      });
+    });
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <div className={`flex flex-col min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-blue-50'}`} 
+         style={{backgroundImage: `url("${darkMode ? darkFoodBgPattern : foodBgPattern}")`}}>
+      <header className={`${darkMode ? 'bg-gray-800' : 'bg-blue-300'} text-white p-4 flex justify-between items-center`}>
+        <h1 className="text-2xl font-bold">Allergy-Free Recipe Assistant</h1>
+        <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-opacity-20 hover:bg-white">
+          {darkMode ? (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+        </button>
+      </header>
+
+      <main className="flex-grow container mx-auto p-4">
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 h-[70vh] flex flex-col`}>
+          <div className="flex-grow overflow-auto mb-4">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'} mb-2`}>
+                <div className={`rounded-lg p-2 max-w-[80%] ${
+                  message.role === 'assistant' 
+                    ? (darkMode ? 'bg-gray-700 text-blue-300' : 'bg-blue-100 text-blue-800')
+                    : (darkMode ? 'bg-gray-600 text-blue-300' : 'bg-purple-100 text-blue-800')
+                }`}>
+                  <p>{message.content}</p>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="flex space-x-2">
+            <input
+              className={`flex-grow p-2 rounded-lg ${
+                darkMode 
+                  ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' 
+                  : 'bg-blue-50 text-gray-900 placeholder-gray-500 border-blue-300'
+              } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              placeholder='Ask about allergy-free recipes'
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             />
-          </a>
+            <button 
+              onClick={sendMessage}
+              className={`${
+                darkMode 
+                  ? 'bg-blue-400 hover:bg-blue-600' 
+                  : 'bg-blue-400 hover:bg-blue-600'
+              } text-white font-bold py-2 px-4 rounded`}
+            >
+              Send
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <footer className={`${darkMode ? 'bg-gray-800' : 'bg-blue-300'} text-white p-4 text-center`}>
+        <p>&copy; 2024 Allergy-Free Recipe Assistant. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }
