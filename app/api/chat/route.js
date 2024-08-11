@@ -4,8 +4,8 @@ import Groq from "groq-sdk";
 const systemPrompt = `You are an AI-powered customer support chatbot.`
 
 export async function POST(req) {
-    // const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const groq = new Groq({ apiKey: process.env.API_KEY })
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    //const groq = new Groq({ apiKey: process.env.API_KEY })
     const data = await req.json()
 
     const completion = await groq.chat.completions.create({
