@@ -8,7 +8,6 @@ const foodBgPattern = `
 const darkFoodBgPattern = `
   data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23304030' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E
 `;
-
 export default function Home() {
   const [messages, setMessages] = useState([{
     role:'assistant',
@@ -70,10 +69,16 @@ export default function Home() {
   };
 
   return (
-    <div className={`flex flex-col min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-blue-50'}`} 
-         style={{backgroundImage: `url("${darkMode ? darkFoodBgPattern : foodBgPattern}")`}}>
+    <div 
+      className={`flex flex-col min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-blue-150'}`} 
+      style={{
+        backgroundImage: darkMode 
+          ? `linear-gradient(90deg, rgba(1,8,22,1) 0%, rgba(70,79,142,1) 49%, rgba(174,154,195,1) 100%)` 
+          : `linear-gradient(90deg, rgba(142,180,254,1) 0%, rgba(162,254,255,1) 41%, rgba(255,255,139,1) 100%)`
+      }}
+    >
       <header className={`${darkMode ? 'bg-gray-800' : 'bg-blue-300'} text-white p-4 flex justify-between items-center`}>
-        <h1 className="text-2xl font-bold">Allergy-Free Recipe Assistant</h1>
+        <h1 className="text-2xl font-bold">SafeBites Assistant</h1>
         <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-opacity-20 hover:bg-white">
           {darkMode ? (
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -135,3 +140,4 @@ export default function Home() {
     </div>
   );
 }
+
