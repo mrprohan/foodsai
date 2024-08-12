@@ -26,6 +26,16 @@ export default function Home() {
 
   useEffect(scrollToBottom, [messages]);
 
+  // Clear messages when user signs out
+  useEffect(() => {
+    if (!isSignedIn) {
+      setMessages([{
+        role: 'assistant',
+        content: `Hi! I'm your allergy-free recipe assistant. How can I help you find a delicious and safe recipe today?`
+      }]);
+    }
+  }, [isSignedIn]);
+
   const sendMessage = async () => {
     if (!message.trim()) return;
     setMessage('');
